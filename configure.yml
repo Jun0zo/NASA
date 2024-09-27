@@ -1,0 +1,9 @@
+start_sol: 238
+sol_range: 3
+minfreq: 0.1
+maxfreq: 10
+channel: BHU
+data_paths:
+  seis: 'data/downloads/seis'
+  twins: 'data/downloads/twins'
+  results: 'data/results'
