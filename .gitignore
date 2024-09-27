@@ -30,3 +30,5 @@ config/*.yaml
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+downloads/
