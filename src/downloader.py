@@ -6,6 +6,23 @@ import logging
 from datetime import datetime, timedelta
 from utils import sols_to_earth_date
 
+sol_ranges = [
+            (0, 122),
+            (123, 210),
+            (211, 300),
+            (301, 389),
+            (390, 477),
+            (478, 566),
+            (567, 668),
+            (669, 745),
+            (746, 832),
+            (833, 921),
+            (922, 1010),
+            (1011, 1100),
+            (1101, 1188),
+            (1189, 1276),
+            (1277, 1366)
+        ]
 
 class SEISDownloader:
     def __init__(self, base_url='https://pds-geosciences.wustl.edu'):
@@ -51,10 +68,21 @@ class SEISDownloader:
 # twins_downloader.py
 
 
+# twins_downloader.py
+
+# twins_downloader.py
+
+
 class TWINSDownloader:
     def __init__(self, base_url='https://atmos.nmsu.edu/PDS/data/PDS4/InSight/twins_bundle/data_derived/'):
         self.base_url = base_url
         self.session = requests.Session()
+
+    def get_directory_for_sol(self, sol):
+        for start, end in sol_ranges:
+            if start <= sol <= end:
+                return f'sol_{start:04d}_{end:04d}/'
+        return None
 
     def download_file(self, url, directory):
         file_name = url.split('/')[-1]
@@ -72,8 +100,108 @@ class TWINSDownloader:
     def download_range(self, start_sol, end_sol, directory):
         for sol in range(start_sol, end_sol + 1):
             sol_str = f"{sol:04d}"
-            file_name = f'twins_model_{sol_str}_02.csv'
-            url = self.base_url + \
-                f'sol_0{(sol // 100) * 100 + 1:03d}_{(sol // 100 + 1) * 100:04d}/{file_name}'
 
-            self.download_file(url, directory)
+            dir_name = self.get_directory_for_sol(sol)
+            if dir_name is None:
+                logging.error(f'sol 번호 {sol}에 해당하는 디렉토리를 찾을 수 없습니다.')
+                continue
+
+            # 디렉토리의 파일 목록 가져오기
+            dir_url = f"{self.base_url}{dir_name}"
+            try:
+                response = self.session.get(dir_url)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # 해당 sol 번호의 파일들 중 버전 번호를 추출하여 최신 버전 찾기
+                version_numbers = []
+                file_urls = {}
+                for link in soup.find_all('a'):
+                    href = link.get('href')
+                    if href.endswith('.csv') and f'twins_model_{sol_str}_' in href:
+                        version_str = href.split(
+                            '_')[-1].split('.')[0]  # 예: '02'
+                        if version_str.isdigit():
+                            version = int(version_str)
+                            version_numbers.append(version)
+                            file_urls[version] = dir_url + href
+
+                if not version_numbers:
+                    logging.error(f'sol 번호 {sol}에 대한 파일을 찾을 수 없습니다.')
+                    continue
+
+                latest_version = max(version_numbers)
+                latest_file_url = file_urls[latest_version]
+
+                # 파일 다운로드
+                self.download_file(latest_file_url, directory)
+
+            except requests.HTTPError as e:
+                logging.error(f'디렉토리 접근 실패: {dir_url}, 에러: {e}')
+
+
+class PSDownloader:
+    def __init__(self, base_url='https://atmos.nmsu.edu/PDS/data/PDS4/InSight/ps_bundle/data_calibrated/'):
+        self.base_url = base_url
+        self.session = requests.Session()
+        
+    def get_directory_for_sol(self, sol):
+        for start, end in sol_ranges:
+            if start <= sol <= end:
+                return f'sol_{start:04d}_{end:04d}/'
+        return None
+            
+    def download_file(self, url, directory):
+        file_name = url.split('/')[-1]
+        file_path = os.path.join(directory, file_name)
+
+        try:
+            response = self.session.get(url)
+            response.raise_for_status()
+            with open(file_path, 'wb') as f:
+                f.write(response.content)
+            logging.info(f'{file_name} 다운로드 완료')
+        except requests.HTTPError as e:
+            logging.error(f'파일 다운로드 실패: {url}, 에러: {e}')
+            
+    def download_range(self, start_sol, end_sol, directory):
+        for sol in range(start_sol, end_sol + 1):
+            sol_str = f"{sol:04d}"
+
+            dir_name = self.get_directory_for_sol(sol)
+            if dir_name is None:
+                logging.error(f'sol 번호 {sol}에 해당하는 디렉토리를 찾을 수 없습니다.')
+                continue
+
+            # 디렉토리의 파일 목록 가져오기
+            dir_url = f"{self.base_url}{dir_name}"
+            try:
+                response = self.session.get(dir_url)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # 해당 sol 번호의 파일들 중 버전 번호를 추출하여 최신 버전 찾기
+                version_numbers = []
+                file_urls = {}
+                for link in soup.find_all('a'):
+                    href = link.get('href')
+                    if href.endswith('.csv') and f'twins_model_{sol_str}_' in href:
+                        version_str = href.split(
+                            '_')[-1].split('.')[0]  # 예: '02'
+                        if version_str.isdigit():
+                            version = int(version_str)
+                            version_numbers.append(version)
+                            file_urls[version] = dir_url + href
+
+                if not version_numbers:
+                    logging.error(f'sol 번호 {sol}에 대한 파일을 찾을 수 없습니다.')
+                    continue
+
+                latest_version = max(version_numbers)
+                latest_file_url = file_urls[latest_version]
+
+                # 파일 다운로드
+                self.download_file(latest_file_url, directory)
+
+            except requests.HTTPError as e:
+                logging.error(f'디렉토리 접근 실패: {dir_url}, 에러: {e}')
