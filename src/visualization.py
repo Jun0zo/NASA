@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime, timedelta
-from core.data_model import SEISData, TWINSData
+from core.data_model import SEISData, TWINSData, PSData
 from utils import sols_to_earth_date
 
 
@@ -14,6 +14,7 @@ def main():
     DEFAULT_DATA_PATHS = {
         'seis': '../data/downloads/seis',
         'twins': '../data/downloads/twins',
+        'ps': '../data/downloads/ps',
         'results': '../data/results'
     }
 
@@ -45,11 +46,12 @@ def main():
     if args.start_sol is not None:
         start_sol = args.start_sol
         start_date = sols_to_earth_date(start_sol)
+        print('start date : ', start_date)
     elif args.start_date is not None:
         try:
             start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
         except ValueError:
-            print('시작 날짜의 형식이 올바르지 않습니다. (예: 2020-01-31)')
+            print('[!] 시작 날짜의 형식이 올바르지 않습니다. (예: 2020-01-31)')
             return
         start_sol = (start_date - landing_date).days
     elif args.start_doy is not None:
@@ -60,7 +62,7 @@ def main():
         try:
             start_date = datetime.strptime(f'{year}-{args.start_doy}', '%Y-%j')
         except ValueError:
-            print('DOY의 범위는 1에서 366 사이여야 합니다.')
+            print('[!] DOY의 범위는 1에서 366 사이여야 합니다.')
             return
         start_sol = (start_date - landing_date).days
 
@@ -80,12 +82,17 @@ def main():
     # SEIS 데이터 처리
     seis_data = SEISData(start_sol, sol_range, channel, data_paths['seis'])
     seis_data.filter_data(minfreq, maxfreq)
-    seis_data.plot_waveform(data_paths['results'])
-    seis_data.plot_spectrogram(data_paths['results'])
+    seis_data.plot_waveform(data_paths['results'] + '/seis_waveform.png')
+    seis_data.plot_spectrogram(minfreq, maxfreq, data_paths['results'] + '/seis_spectrogram.png')
 
     # TWINS 데이터 처리
     twins_data = TWINSData(start_sol, sol_range, data_paths['twins'])
-    # twins_data.process_data()
+    twins_data.plot_wind_speed(data_paths['results'] + '/twins_wind_speed.png')
+    twins_data.plot_temperature(data_paths['results'] + '/twins_temperature.png')
+    
+    ps_data = PSData(start_sol, sol_range, data_paths['ps'])
+    ps_data.plot_pressure(data_paths['results'] + '/ps_pressure.png')
+    
 
 
 if __name__ == '__main__':
