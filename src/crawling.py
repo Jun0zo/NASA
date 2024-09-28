@@ -18,16 +18,16 @@ def main():
 
     # 시작점을 지정하는 상호 배타적인 그룹 생성
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--start_sol', type=int, help='시작 솔 번호')
+    group.add_argument('--start_sol', type=int, help='시작 sol 번호')
     group.add_argument('--start_date', type=str, help='시작 날짜 (YYYY-MM-DD)')
     group.add_argument('--start_doy', type=int, help='시작 DOY (1-366)')
 
     parser.add_argument('--year', type=int,
                         help='시작 DOY를 사용하는 경우 연도 지정 (예: 2019)')
     parser.add_argument('--range', type=int, default=1,
-                        help='데이터를 다운로드할 일수 또는 솔 수')
+                        help='데이터를 다운로드할 일수 또는 sol 수')
     parser.add_argument('--output_dir', type=str,
-                        default='downloads', help='다운로드할 디렉토리')
+                        default='../data/downloads', help='다운로드할 디렉토리')
 
     args = parser.parse_args()
 
@@ -59,7 +59,7 @@ def main():
             return
         start_sol = (start_date - landing_date).days
     else:
-        logging.error('시작 솔 번호, 시작 날짜 또는 시작 DOY를 입력해야 합니다.')
+        logging.error('시작 sol 번호, 시작 날짜 또는 시작 DOY를 입력해야 합니다.')
         return
 
     # end_date 및 end_sol 계산
@@ -67,7 +67,7 @@ def main():
     end_date = start_date + timedelta(days=args.range - 1)
 
     logging.info(f'SEIS 데이터 다운로드: {start_date.date()}부터 {end_date.date()}까지')
-    logging.info(f'TWINS 데이터 다운로드: 솔 {start_sol}부터 솔 {end_sol}까지')
+    logging.info(f'TWINS 데이터 다운로드: sol {start_sol}부터 sol {end_sol}까지')
 
     # 다운로드 객체 생성
     seis_downloader = SEISDownloader()
@@ -92,6 +92,6 @@ if __name__ == '__main__':
     main()
 
     # 사용 예시:
-    # python crawling.py --start_sol 237 --range 3
-    # python crawling.py --start_date 2020-01-31 --range 3
-    # python crawling.py --start_doy 31 --year 2020 --range 3
+    # python crawling.py --start_sol 237 --range 3 --output_dir ../data/downloads
+    # python crawling.py --start_date 2020-01-31 --range 3 --output_dir ../data/downloads
+    # python crawling.py --start_doy 31 --year 2020 --range 3 --output_dir ../data/downloads
