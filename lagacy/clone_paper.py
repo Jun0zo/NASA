@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 import os
-from src.utils import sols_to_earth_date
+from utils import sols_to_earth_date
 
 start_sol = 238
 sol_range = 3
@@ -24,7 +24,7 @@ def get_seis_file_name(date, channel):
     doy = date.timetuple().tm_yday
     print(f"year-doy : {year}-{doy}")
 
-    for filename in sorted(os.listdir('downloads/seis')):
+    for filename in sorted(os.listdir('../data/downloads/seis')):
         if ".mseed" in filename and \
                 str(doy) in filename and \
                 str(year) in filename and \
@@ -34,7 +34,7 @@ def get_seis_file_name(date, channel):
 
 
 def get_twins_file_name(sols):
-    for filename in sorted(os.listdir('downloads/twins')):
+    for filename in sorted(os.listdir('../data/downloads/twins')):
         if ".csv" in filename and \
                 str(sols) in filename:
             return filename
@@ -57,7 +57,7 @@ def read_obsfiles(file_names):
 
 seis_file_names = []
 for sol_number in range(start_sol, start_sol + sol_range):
-    seis_file_names.append("downloads/seis/" + get_seis_file_name(
+    seis_file_names.append("../data/downloads/seis/" + get_seis_file_name(
         date=sols_to_earth_date(sol_number), channel="BHU"))
 
 print(seis_file_names)
