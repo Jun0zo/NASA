@@ -4,7 +4,7 @@ import os
 import argparse
 import logging
 from datetime import datetime, timedelta
-from downloader import SEISDownloader, TWINSDownloader
+from downloader import SEISDownloader, TWINSDownloader, PSDownloader
 from utils import sols_to_earth_date
 
 
@@ -72,21 +72,28 @@ def main():
     # 다운로드 객체 생성
     seis_downloader = SEISDownloader()
     twins_downloader = TWINSDownloader()
+    ps_downloader = PSDownloader()
 
     # SEIS 데이터 다운로드
-    seis_downloader.crawl_and_download(
-        start_date=start_date,
-        end_date=end_date,
-        directory=seis_dir
-    )
+    # seis_downloader.crawl_and_download(
+    #     start_date=start_date,
+    #     end_date=end_date,
+    #     directory=seis_dir
+    # )
 
-    # TWINS 데이터 다운로드
-    twins_downloader.download_range(
+    # # TWINS 데이터 다운로드
+    # twins_downloader.download_range(
+    #     start_sol=start_sol,
+    #     end_sol=end_sol,
+    #     directory=twins_dir
+    # )
+    
+    # PS 데이터 다운로드
+    ps_downloader.download_range(
         start_sol=start_sol,
         end_sol=end_sol,
         directory=twins_dir
     )
-
 
 if __name__ == '__main__':
     main()
