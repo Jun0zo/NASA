@@ -50,7 +50,7 @@ class SEISDownloader:
 
             for station in ['elyh0', 'elyhk', 'elys0', 'elyse']:
                 url = f'{self.base_url}/insight/urn-nasa-pds-insight_seis/data/xb/continuous_waveform/{station}/{year}/{doy:03d}/'
-
+                logging.info(f"[*] Crawling URL: {url}")
                 try:
                     response = self.session.get(url)
                     response.raise_for_status()
@@ -162,7 +162,7 @@ class PSDownloader:
                 f.write(response.content)
             logging.info(f'{file_name} 다운로드 완료')
         except requests.HTTPError as e:
-            logging.error(f'파일 다운로드 실패: {url}, 에러: {e}')
+            logging.error(f'[!] 파일 다운로드 실패: {url}, 에러: {e}')
             
     def download_range(self, start_sol, end_sol, directory):
         for sol in range(start_sol, end_sol + 1):
@@ -170,7 +170,7 @@ class PSDownloader:
 
             dir_name = self.get_directory_for_sol(sol)
             if dir_name is None:
-                logging.error(f'sol 번호 {sol}에 해당하는 디렉토리를 찾을 수 없습니다.')
+                logging.error(f'[!] sol 번호 {sol}에 해당하는 디렉토리를 찾을 수 없습니다.')
                 continue
 
             # 디렉토리의 파일 목록 가져오기
@@ -185,7 +185,7 @@ class PSDownloader:
                 file_urls = {}
                 for link in soup.find_all('a'):
                     href = link.get('href')
-                    if href.endswith('.csv') and f'twins_model_{sol_str}_' in href:
+                    if href.endswith('.csv') and f'ps_calib_{sol_str}_' in href:
                         version_str = href.split(
                             '_')[-1].split('.')[0]  # 예: '02'
                         if version_str.isdigit():
